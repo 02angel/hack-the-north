@@ -1,0 +1,410 @@
+#-----------------------------------------------------------------------------
+# Name:        Assignment 2(Assignment 2.py)
+# Purpose:     This is a program created to practice file reading and writing 
+#
+# Author:      Angel Li (588849)
+# Created:     31-May-19
+# Updated:     07-June-19
+#-----------------------------------------------------------------------------
+import logging
+import itertools 
+logging.basicConfig(filename="log.txt", level=logging.DEBUG,format="%(asctime)s %(levelname)s %(message)s")
+#logging.basicConfig(level=logging.DEBUG,format="%(asctime)s %(levelname)s %(message)s")
+
+wordsList=[]
+englishDictionary = {}
+DictionaryFile = "dictionary.txt"
+orgActsFile="story.txt"
+HoroscopesDictionary = {
+      "Sagittarius": ["generous", "idealistic", "funny", "impatient"],
+      "Capricorn": ["responsible", "self-controlled", "unforgiving"],
+      "Aquarius": ["progressive", "independent", "original", "temperamental"],
+      "Pisces" : ["compassionate", "artistic", "intuitive", "wise", "fearful"],
+      "Aries":["courageous","determined", "confident", "optimistic", "honest", "impulsive"],
+      "Taurus": ["reliable", "patient", "responsible", "stubborn"],
+      "Gemini": ["gentle", "curious", "affectionate", "indecisive"],
+      "Cancer": ["tenacious", "loyal", "sympathetic", "persuasive", "moody"],
+      "Leo": ["creative", "passionate", "humorous", "inflexible"],
+      "Virgo": ["kind", "hardworking", "analytical", "shy"],
+      "Libra": ["cooperative", "gracious", "social", "nonconfrontational"],
+      "Scorpio": ["resourceful", "brave", "loyal", "passionate", "jealous"],
+}
+def loadDictionary():
+  '''
+  loads the dictionary
+  
+  Function reads the dictionary file and creates a dictionary with the letters in the alphabet as the key and the position of the first word that starts with that letter as the value (index). Furthermore, it adds all the words into a list (wordsList)
+  
+  Parameters
+  ----------
+  None
+    
+  Returns
+  -------
+  None 
+  '''
+  with open(DictionaryFile, 'r') as fpIn:  
+    line = fpIn.readline()
+    size = len(line)
+    alpha = line[0]
+    currentAlpha = 0
+    count = 0
+    while line:
+      if (size > 0):
+        wordsList.append(line.strip('\n'))
+        alpha = line[0]
+        # build alpha index for efficiency
+        if (currentAlpha != alpha):
+          currentAlpha = alpha
+          englishDictionary[currentAlpha] = count
+        count += 1  
+      line = fpIn.readline()
+      size = len(line)
+  return
+def isWord(word):
+  '''
+  checks if input is a word
+  
+  Function checks if the paramater is a word using the dictionary file. If it is, the function returns true, and if not, the function returns false.
+  
+  Parameters
+  ----------
+  word: string
+    The word is any alphabetical string. 
+    
+  Returns
+  -------
+  Boolean
+  '''
+  logging.info("check [%s]" % (word))
+  start = englishDictionary[word[0].lower()]
+  if (word[0].lower() < 'z'):
+    nextChar = chr(ord(word[0].lower()) + 1)
+    end = englishDictionary[nextChar]
+  else:
+    end = len(wordsList)
+  for i in range(start, end):
+    if (wordsList[i] == word):
+      return True
+  return False
+def caculatePoints(words):
+  '''
+  calculates the scrabble points that the inputted word has.
+  
+  Function calculates the number of scrabble points an inputted word has using a list of the number of points each letter has in scrabble.
+  
+  Parameters
+  ----------
+  words: string
+    Words is the string the user inputs
+  Returns
+  -------
+  int 
+    Returns number of points or error message
+  '''
+  #pre-define points for each character
+  #             A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z
+  charPoints = [1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 1, 1, 3, 10, 1,1, 1, 1, 4, 4, 8, 4, 10]
+  logging.info("caculatePoints input[%s]" % (words))
+  if (not words.isalpha()):
+    raise TypeError ("input is not an alpha string")
+  points = 0
+  for c in words:
+    points += charPoints[ord(c) - ord('A')]
+  return points
+  
+def anagrams():
+  '''
+  finds all the anagrams length 2-n for an inputted word with length n.
+  
+  Function receives inputted word, asks for the length of the anagram the user wants, and then outputs all possible anagrams of that length. As well, the function uses isword function to determine whether or not a permutation is a word.
+  
+  Parameters
+  ----------
+  None
+    
+  Returns
+  -------
+  string
+  All possible anagrams or invalid input message
+  '''
+  inputWord = input("please input a word:")
+  logging.info("anagrams input [%s]", inputWord)
+  if (not inputWord.isalpha()):
+    raise TypeError("invalid input")
+  while True:
+    length = input("please input the number of letters you want your anagram to be:")
+    logging.info("anagrams input length [%s]", length)
+    try:
+      num = int(length)
+      break
+    except Exception as e:
+      print("please enter a number")
+      continue
+  if (num < 2):
+    raise ("it is too short")
+  if  (num > len(inputWord)):
+    raise ValueError("it is too long")
+  logging.debug("anagrams inputWord=[%s] length [%s]", inputWord, length)
+  combination = list(itertools.combinations(inputWord, num))
+  logging.debug("anagrams combination=[%s] ", str(combination))
+  for eachCombination in combination:
+    permutations = list(itertools.permutations(eachCombination))
+    logging.debug("anagrams permutations=[%s] ", str(permutations))
+    for eachPermutations in permutations:
+      word = "".join(eachPermutations)
+      if(isWord(word)):
+        print("%s" % word)
+  return
+
+def stringManipulation():
+  '''
+  Makes menu for option 2 in main menu (string manipulation).
+  
+  Function displays menu and performs all listed tasks below.
+  
+  Parameters
+  ----------
+  None
+    
+  Returns
+  -------
+  None
+  '''
+  while True:
+    print("""Choose an option below:\n\ta. spongebob meme (alternate capitalization)\n\tb. strip (letters will be stripped away from your inputted word to make new words)\n\tc. alphabetical sort (words will be organized in alphabetical order)\n\td. exclamation marks (number of exclamation marks will match the number of letters in the word inputted)\n\te. scrabble (scrabble points determined by letters inputted)\n\t0. Exit""")
+    #input variable
+    try:
+      userInput1 = input()
+      if userInput1 == 'a':
+        sentence = input("Please enter a word or sentence:")
+        letterList = list(sentence)
+        for i in range(0, len(letterList), 2):
+          letterList[i] = letterList[i].upper()
+        sentence = "".join(letterList)
+        print(sentence)
+      elif userInput1 == 'b':
+        word = input("Please enter a word:")
+        if (not word.isalpha()):
+          raise TypeError("input is not a word")
+        for i in range(1, len(word)):
+          subWord = word[0: len(word) - i]
+          if (isWord(subWord)):
+            print("%s is a word" % (subWord))
+      elif userInput1 == 'c':
+        sentence = input("Please enter a list of words separated by spaces:")
+        if not all(c.isalpha() or c.isspace() for c in sentence):
+          raise TypeError ("invalid input")
+        words = sentence.split(" ")
+        for word in words:
+          print("%s starts with %s, ends with %s" % (word, word[0:1], word[-1:]))
+        words.sort()
+        wordsStr = str(words)
+        wordsStr = wordsStr.replace('\'', '')
+        print("Alphabetically sorted: " + wordsStr[1:-1])
+      elif userInput1 == 'd':
+        sentence = input("Please enter a sentence:")
+        stringValue = "!" * len(sentence)
+        print(sentence+stringValue)
+      elif userInput1 == 'e':
+        sentence = input("Please enter a list of words separated by spaces:")
+        sentence = sentence.upper()
+        if not all(c.isalpha() or c.isspace() for c in sentence):
+          raise TypeError ("invalid input")
+        words = sentence.replace(" ", "")
+        points = caculatePoints(words)
+        print("you can receive %d points with these letters. Good Luck!" % points)
+      elif userInput1 == '0':
+        return 
+    except Exception as e:
+      print(e)
+      logging.warning("stringManipulation [%s]", str(e))
+      continue
+    
+def getHoroscopes(month, day): 
+  '''
+  determines the user's horoscope
+  
+  Function determines the horoscope based on inputted month and day.
+  
+  Parameters
+  ----------
+  month: int
+    The month is the month that the user was born (1-12)
+  day: int
+    The day is the day that the user was born (1-31)
+  Returns
+  -------
+  string
+    The function returns the user's horoscope
+  '''
+   # checks month and date within the valid range 
+   # of a specified zodiac 
+  if month == 12: 
+    astroSign = 'Sagittarius' if (day < 22) else 'Capricorn'
+  elif month == 1:
+    astroSign = 'Capricorn' if (day < 20) else 'Aquarius'
+  elif month == 2: 
+    astroSign = 'Aquarius' if (day < 19) else 'Pisces'
+  elif month == 3: 
+    astroSign = 'Pisces' if (day < 21) else 'Aries'
+  elif month == 4: 
+    astroSign = 'Aries' if (day < 20) else 'Taurus'
+  elif month == 5: 
+    astroSign = 'Taurus' if (day < 21) else 'Gemini'
+  elif month == 6: 
+    astroSign = 'Gemini' if (day < 21) else 'Cancer'
+  elif month == 7: 
+    astroSign = 'Cancer' if (day < 23) else 'Leo'
+  elif month == 8: 
+    astroSign = 'Leo' if (day < 23) else 'Virgo'
+  elif month == 9: 
+    astroSign = 'Virgo' if (day < 23) else 'Libra'
+  elif month == 10: 
+    astroSign = 'Libra' if (day < 23) else 'Scorpio'
+  elif month == 11: 
+    astroSign = 'Scorpio' if (day < 22) else 'Sagittarius'
+  return astroSign
+   
+def horoscopes():
+  '''
+  This function determines the user's horoscope and qualities.
+  
+  Function checks whether or not the input is valid and then using the function gethoroscopes, determines the horoscope of the user and its qualities. Depending on the user's input, function outputs the user's horoscope as well as the qualities. 
+  
+  Parameters
+  ----------
+  None
+    
+  Returns
+  -------
+  None 
+  '''
+  days = [31, 29, 30, 31, 30, 31, 31, 31, 30, 31, 30, 31]
+  while True:
+    try:
+      birthDay = input("What is your birthday (MMDD)?")
+      logging.info("horoscopes input [%s]", birthDay)
+      month = int(birthDay[0:2])
+      if (month <= 0) or (month >12):
+        raise ValueError ("invalid month")
+      day = int(birthDay[2:])
+      logging.debug("horoscopes input=[%s], month=[%d], day=[%d]", birthDay, month, day)
+      if (day <= 0) or (day > days[month - 1]):
+        raise ValueError ("invalid day")
+      logging.debug("user input month=[%d], day[%d]", month, day)
+      horoscope = getHoroscopes(month, day)
+      explain = HoroscopesDictionary.get(horoscope)
+      logging.info("user horoscopes=[%s], explain=[%s]", horoscope, explain)
+      print("Your horoscope is: %s, your personality traits are: %s" % (horoscope, ', '.join(explain)))
+      break;
+    except Exception as e:
+      print(e)
+      logging.warning("horoscopes input exception [%s] message =[%s]", birthDay, str(e))
+      continue
+  return 
+
+def macbeth():
+  '''
+  This function reads the inputted act and writes it to a different file.
+  
+  Function takes the user's input (str) and finds the act that the user wishes to retrieve to another file. 
+  
+  Parameters
+  ----------
+  None
+    
+  Returns
+  -------
+  None 
+  '''
+  existAct =['I', 'II', 'III', 'IV', 'V', 'i', 'ii', 'iii', 'iv', 'v', '1', '2', '3', '4', '5']
+  while True:
+    try:
+      inputNumber = input("please enter ACT Number (I ~ V):")
+      if (not (inputNumber in existAct)):
+        raise TypeError ("invalid input ")
+      index = existAct.index(inputNumber)
+      index = index % 5
+      actNumber = existAct[index]
+      actName = "ACT " + actNumber
+      actIndex = existAct.index(actNumber)
+      logging.debug("macbeth inputNumber [%s] actNumber=[%s] actName =[%s], actIndex=[%d]", inputNumber, actNumber, actName, actIndex)
+      if (actIndex == len(existAct) - 1):
+        nextAct = ""
+      else:
+        nextAct = "ACT " + existAct[actIndex + 1]
+      logging.debug("macbeth nextAct=[%s]", nextAct)
+      break
+    except Exception as e:
+      print(e)
+      logging.warning("macbeth input exception [%s] message =[%s]", actNumber, str(e))
+      continue
+      
+  writeFlag = False
+  # try and finally function ensure that the file will always close
+  try:
+    fpin = open(orgActsFile, 'r')
+    outputFile = "ACT" + actNumber + ".txt" 
+    fpOut = open(outputFile, 'w')
+    for line in fpin:
+      if ((nextAct !="") and (line.find(nextAct) == 0)):
+        break;
+      if (line.find(actName) == 0):
+        writeFlag = True
+      if(writeFlag == True):
+        fpOut.write(line)
+  except Exception as e:
+    print(str(e))
+    logging.error("macbeth open file got Exception [%s]", str(e))
+  finally:
+    fpin.close()
+    fpOut.close()
+  try:
+    fpin = open(outputFile, 'r')
+    for line in fpin:
+      print(line)
+  except Exception as e:
+    print(str(e))
+    logging.error("macbeth open file [%s] got Exception [%s]" ,outputFile, str(e))
+  finally:  
+    fpin.close()
+  return
+
+logging.info("application start")
+try:
+  loadDictionary()
+except Exception as e:
+  logging.critical("loading dictionary error [%s]", str(e))
+  print ("loading dictionary error [%s]"% str(e))
+  exit()
+logging.info("loaded all words")
+while True: 
+  print("""Choose an option below: \n\t1. anagrams (output anagrams based on the word you input) \n\t2. string manipulation (more options to come!)\n\t3. horoscopes (determines your horoscope and your personality traits)\n\t4. macbeth (rewrite an act to another file)\n\t0. Exit""")
+  #input variable
+  userInput2 = input()
+  if userInput2 == "1":
+    try:
+      anagrams()
+    except Exception as e:
+      print(e)
+  elif userInput2 == "2":
+    try:
+      stringManipulation()
+    except Exception as e:
+      print (e)
+  elif userInput2 == "3":
+    try:
+      horoscopes()
+    except Exception as e:
+      print (e)
+  elif userInput2 == "4":
+    try:
+      macbeth()
+    except Exception as e: 
+      print (e)
+  elif userInput2 == "0":
+    break;
+  else: 
+    print("invalid input")
+    continue
